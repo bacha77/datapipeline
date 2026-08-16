@@ -171,7 +171,9 @@ with tab7:
     biotech_ticker = st.selectbox("Select Biotech Company", ["PFE", "MRNA", "CRSP"])
     if st.button("Fetch Phase 3 Trials"):
         with st.spinner("Querying ClinicalTrials.gov API..."):
-            url = f"https://clinicaltrials.gov/api/v2/studies?query.sponsor={biotech_ticker}&filter.phase=PHASE3&filter.overallStatus=RECRUITING&pageSize=10"
+            biotech_map = {"PFE": "Pfizer", "MRNA": "Moderna", "CRSP": "CRISPR"}
+            company_name = biotech_map[biotech_ticker]
+            url = f"https://clinicaltrials.gov/api/v2/studies?query.sponsor={company_name}&filter.phase=PHASE3&filter.overallStatus=RECRUITING&pageSize=10"
             try:
                 response = requests.get(url)
                 if response.status_code == 200:
@@ -190,7 +192,7 @@ with tab7:
                             })
                         st.dataframe(pd.DataFrame(parsed), use_container_width=True)
                     else:
-                        st.warning("No active Phase 3 recruiting trials found.")
+                        st.warning(f"No active Phase 3 recruiting trials found for {company_name}.")
             except Exception as e:
                 st.error(f"Error fetching data: {e}")
 

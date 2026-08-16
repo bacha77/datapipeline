@@ -17,11 +17,11 @@ def fetch_and_store_biotech(db_name="alt_data.db"):
             ticker TEXT,
             active_phase3_trials INTEGER)''')
     
+    biotech_map = {"PFE": "Pfizer", "MRNA": "Moderna", "CRSP": "CRISPR"}
     for ticker in TICKERS:
         try:
-            # Query ClinicalTrials.gov API v2
-            # Searching for active Phase 3 trials sponsored by the company
-            url = f"https://clinicaltrials.gov/api/v2/studies?query.sponsor={ticker}&filter.phase=PHASE3&filter.overallStatus=RECRUITING&pageSize=1"
+            company_name = biotech_map[ticker]
+            url = f"https://clinicaltrials.gov/api/v2/studies?query.sponsor={company_name}&filter.phase=PHASE3&filter.overallStatus=RECRUITING&pageSize=1"
             response = requests.get(url)
             if response.status_code == 200:
                 data = response.json()
