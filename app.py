@@ -24,13 +24,14 @@ def load_db_data(query):
     return df
 
 # Create tabs
-tab1, tab2, tab3, tab4, tab6, tab7, tab5 = st.tabs([
+tab1, tab2, tab3, tab4, tab6, tab7, tab8, tab5 = st.tabs([
     "🗣️ Retail Sentiment", 
     "⌚ Luxury Goods Proxy", 
     "✈️ Global Aviation",
     "🏦 Smart Money",
     "🛡️ Defense Contracts",
     "🧬 FDA Biotech",
+    "📈 SPY Options Flow",
     "📊 Historical Archive"
 ])
 
@@ -195,6 +196,46 @@ with tab7:
                         st.warning(f"No active Phase 3 recruiting trials found for {company_name}.")
             except Exception as e:
                 st.error(f"Error fetching data: {e}")
+
+# ==========================================
+# TAB 8: SPY OPTIONS FLOW
+# ==========================================
+with tab8:
+    st.header("📈 SPY Options Flow (Put/Call Ratio)")
+    st.markdown("Track intraday and swing sentiment by analyzing the SPY options chain. High PCR (> 1.0) is Bearish. Low PCR (< 1.0) is Bullish.")
+    if st.button("Analyze Current SPY Chain"):
+        with st.spinner("Fetching live options chain from Yahoo Finance..."):
+            try:
+                import yfinance as yf
+                spy = yf.Ticker('SPY')
+                dates = spy.options
+                if dates:
+                    target_dates = dates[:2]
+                    for date in target_dates:
+                        st.subheader(f"Expiration: {date}")
+                        opt = spy.option_chain(date)
+                        calls = opt.calls
+                        puts = opt.puts
+                        
+                        call_vol = int(calls['volume'].sum())
+                        put_vol = int(puts['volume'].sum())
+                        call_oi = int(calls['openInterest'].sum())
+                        put_oi = int(puts['openInterest'].sum())
+                        
+                        pcr = put_vol / call_vol if call_vol > 0 else 0
+                        
+                        col1, col2, col3 = st.columns(3)
+                        col1.metric("Put/Call Ratio (Volume)", f"{pcr:.2f}", delta="Bearish" if pcr > 1 else "Bullish", delta_color="inverse")
+                        col2.metric("Total Call Vol (Bullish)", f"{call_vol:,}")
+                        col3.metric("Total Put Vol (Bearish)", f"{put_vol:,}")
+                        
+                        # Simple visual comparison
+                        st.bar_chart({"Calls": [call_vol], "Puts": [put_vol]}, color=["#2ECC71", "#E74C3C"])
+                        st.divider()
+                else:
+                    st.warning("No options data available.")
+            except Exception as e:
+                st.error(f"Error fetching SPY options: {e}")
 
 # ==========================================
 # TAB 5: HISTORICAL ARCHIVE (PIPELINE DATA)

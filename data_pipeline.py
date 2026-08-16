@@ -128,6 +128,7 @@ def export_to_csv():
 
 from scrapers.biotech import fetch_and_store_biotech
 from scrapers.defense import fetch_and_store_defense
+from scrapers.spy_options import fetch_and_store_spy_options
 
 if __name__ == "__main__":
     print("Starting Automated Alternative Data Pipeline...")
@@ -138,6 +139,7 @@ if __name__ == "__main__":
     fetch_and_store_aviation()
     fetch_and_store_biotech()
     fetch_and_store_defense()
+    fetch_and_store_spy_options()
     
     export_to_csv()
     print("Batch complete. Exiting script. (GitHub Actions will re-run this next hour)")
