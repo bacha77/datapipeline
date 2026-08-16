@@ -24,11 +24,13 @@ def load_db_data(query):
     return df
 
 # Create tabs
-tab1, tab2, tab3, tab4, tab5 = st.tabs([
+tab1, tab2, tab3, tab4, tab6, tab7, tab5 = st.tabs([
     "🗣️ Retail Sentiment", 
     "⌚ Luxury Goods Proxy", 
     "✈️ Global Aviation",
     "🏦 Smart Money",
+    "🛡️ Defense Contracts",
+    "🧬 FDA Biotech",
     "📊 Historical Archive"
 ])
 
@@ -128,6 +130,69 @@ with tab4:
         with st.spinner("Pulling 13F and Form 4..."):
             stock = yf.Ticker(smart_money_ticker)
             st.write(stock.institutional_holders)
+
+# ==========================================
+# TAB 6: DEFENSE CONTRACTS
+# ==========================================
+with tab6:
+    st.header("🛡️ Defense & Tech Government Contracts")
+    st.markdown("Track massive federal contracts awarded to public companies before earnings.")
+    defense_ticker = st.selectbox("Select Defense/Tech Company", ["PLTR", "LMT", "RTX"])
+    if st.button("Fetch Contract Awards"):
+        with st.spinner("Querying USASpending.gov API..."):
+            keyword_map = {"PLTR": "PALANTIR", "LMT": "LOCKHEED MARTIN", "RTX": "RAYTHEON"}
+            payload = {
+                "filters": {
+                    "award_type_codes": ["A", "B", "C", "D"],
+                    "recipient_search_text": [keyword_map[defense_ticker]],
+                    "time_period": [{"date_type": "action_date", "start_date": "2024-01-01", "end_date": "2026-12-31"}]
+                },
+                "fields": ["Award Amount", "Awarding Agency"],
+                "limit": 10
+            }
+            try:
+                response = requests.post("https://api.usaspending.gov/api/v2/search/spending_by_award/", json=payload)
+                if response.status_code == 200:
+                    results = response.json().get('results', [])
+                    if results:
+                        df_contracts = pd.DataFrame(results)
+                        st.dataframe(df_contracts, use_container_width=True)
+                    else:
+                        st.warning("No recent contracts found.")
+            except Exception as e:
+                st.error(f"Error fetching data: {e}")
+
+# ==========================================
+# TAB 7: FDA BIOTECH
+# ==========================================
+with tab7:
+    st.header("🧬 FDA Biotech Clinical Trials")
+    st.markdown("Track active Phase 3 clinical trials for major biotech companies.")
+    biotech_ticker = st.selectbox("Select Biotech Company", ["PFE", "MRNA", "CRSP"])
+    if st.button("Fetch Phase 3 Trials"):
+        with st.spinner("Querying ClinicalTrials.gov API..."):
+            url = f"https://clinicaltrials.gov/api/v2/studies?query.sponsor={biotech_ticker}&filter.phase=PHASE3&filter.overallStatus=RECRUITING&pageSize=10"
+            try:
+                response = requests.get(url)
+                if response.status_code == 200:
+                    studies = response.json().get('studies', [])
+                    if studies:
+                        parsed = []
+                        for s in studies:
+                            protocol = s.get('protocolSection', {})
+                            ident = protocol.get('identificationModule', {})
+                            status = protocol.get('statusModule', {})
+                            parsed.append({
+                                "NCT ID": ident.get('nctId'),
+                                "Title": ident.get('briefTitle'),
+                                "Status": status.get('overallStatus'),
+                                "Start Date": status.get('startDateStruct', {}).get('date')
+                            })
+                        st.dataframe(pd.DataFrame(parsed), use_container_width=True)
+                    else:
+                        st.warning("No active Phase 3 recruiting trials found.")
+            except Exception as e:
+                st.error(f"Error fetching data: {e}")
 
 # ==========================================
 # TAB 5: HISTORICAL ARCHIVE (PIPELINE DATA)
