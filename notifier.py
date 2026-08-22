@@ -8,7 +8,7 @@ def send_email_alert(prediction_data):
     # Defaults are provided for testing purposes
     sender_email = os.environ.get("ALERT_SENDER_EMAIL")
     sender_password = os.environ.get("ALERT_SENDER_PASSWORD")
-    recipient_list = os.environ.get("ALERT_RECIPIENT_EMAILS", "fifinecarrenan@gmail.com").split(",")
+    recipient_list = os.environ.get("ALERT_RECIPIENT_EMAILS", "bacha7@gmail.com").split(",")
     
     if not sender_email or not sender_password:
         print("Error: Email configuration environment variables are missing.")
